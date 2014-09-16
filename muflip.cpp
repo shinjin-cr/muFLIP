@@ -2,15 +2,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-
 #define FORCC   for (int j=0; j<N; ++j) for (int i=0; i<N; ++i)
 #define FORCCIN for (int j=1; j<N-1; ++j) for (int i=1; i<N-1; ++i)
 #define FORCORNERS(i,j) for (int jj=(j); jj<(j)+2; ++jj) for (int ii=(i); ii<(i)+2; ++ii)
 #define IDXX(i,j) ((i)+(j)*Np1)
 #define IDXY(i,j) (Y+(i)+(j)*N)
-
 enum Cell { EMPTY, FLUID, SOLID };
-
 const int N = 32;       // the size of the world is N*N
 const int Np1 = N+1;
 const int Y = N*(N+1);  // skip in MAC grids to the Y faces
@@ -20,12 +17,9 @@ double m[2*N*(N+1)];    // masses on the grid
 double p[N*N];          // pressure cells
 double divu[N*N];       // divergence of u, and the RHS of the Poisson eqn
 Cell flags[N*N];        // solid/fluid/empty flags
-
 const int PN = (N-2)/4*(N-4)*4;             // number of particles
 double px[PN], py[PN], pvx[PN], pvy[PN];    // particle positions and velocities
-
 double dt = 0.01;
-
 void init() { // Dam Break
     int idx = 0;
     memset(pvx, 0, sizeof(pvx));
@@ -34,7 +28,6 @@ void init() { // Dam Break
         if (idx < PN && i-1 < (N-2)/4)
             FORCORNERS(0,0) px[idx] = i+0.25+ii*0.5, py[idx++] = j+0.25+jj*0.5; // add 4 particles to each initial cell
 }
-
 void particles2grid() {
     memset(u, 0, sizeof(u));
     memset(m, 0, sizeof(m));
@@ -55,7 +48,6 @@ void particles2grid() {
         if (m[k]>1e-8) { m[k] = 1/m[k]; u[k] *= m[k]; }
     memcpy(ux, u, sizeof(u));
 }
-
 void pressureSolve() {
     FORCCIN { divu[i+j*N] = -(u[i+1+j*Np1]-u[i+j*Np1] + u[Y+i+(j+1)*N]-u[Y+i+j*N]); }
     for (int k=1; k<N-1; ++k) {
@@ -80,7 +72,6 @@ void pressureSolve() {
     for (int k=1; k<N-1; ++k)
         u[1+k*Np1] = u[N-1+k*Np1] = u[Y+k+N] = u[Y+k+(N-1)*N] = 0;
 }
-
 void updateAndAdvect(double flip) {
     for (int k=0; k<PN; ++k) {
         int i(px[k]), j(py[k]), fi(px[k]-0.5), fj(py[k]-0.5);
@@ -99,7 +90,6 @@ void updateAndAdvect(double flip) {
         py[k] = std::min(std::max(py[k]+vy*dt,1.001),N-1.001);
     }
 }
-
 int main() {
     if (!glfwInit()) exit(EXIT_FAILURE);
     GLFWwindow *window = glfwCreateWindow(800, 800, "muFLIP", NULL, NULL);
@@ -112,7 +102,6 @@ int main() {
             if (m[Y+k]>1e-8) u[Y+k] += -9.81*dt*(N-2);
         pressureSolve();
         updateAndAdvect(0.96);
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBegin(GL_POINTS);
         for (int k=0; k<PN; ++k)
